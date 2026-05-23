@@ -153,7 +153,7 @@ OnkyoAvrManager.prototype.isSystemPoweroffInProgress = function () {
 };
 
 OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
-  var configPath = this.configFilePath || (__dirname + '/config.json');
+  var configPath = this.writeShutdownPoweroffConfig();
   var service = [
     '[Unit]',
     'Description=Onkyo AVR shutdown power-off hook',
@@ -186,6 +186,32 @@ OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
   } catch (err) {
     this.logError('Failed to install Onkyo AVR shutdown power-off service: ' + err.message);
   }
+};
+
+OnkyoAvrManager.prototype.writeShutdownPoweroffConfig = function () {
+  var configPath = __dirname + '/shutdown-poweroff-config.json';
+  var shutdownConfig = {
+    receiverHost: {
+      type: 'string',
+      value: this.getReceiverHost()
+    },
+    receiverPort: {
+      type: 'number',
+      value: this.getReceiverPort()
+    },
+    powerOffOnVolumioShutdown: {
+      type: 'boolean',
+      value: this.getBooleanConfigValue('powerOffOnVolumioShutdown', true)
+    }
+  };
+
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(shutdownConfig, null, 2));
+  } catch (err) {
+    this.logError('Failed to write shutdown power-off config: ' + err.message);
+  }
+
+  return configPath;
 };
 
 OnkyoAvrManager.prototype.onVolumioStateChange = function (state) {

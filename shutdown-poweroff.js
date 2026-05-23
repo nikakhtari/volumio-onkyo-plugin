@@ -102,6 +102,7 @@ function shouldRunForCurrentShutdown() {
 
 function main() {
   var configPath = process.argv[2] || (__dirname + '/config.json');
+  var force = process.argv.indexOf('--force') !== -1;
   var config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   var host = String(readConfigValue(config, 'receiverHost', '')).trim();
   var port = parseInt(readConfigValue(config, 'receiverPort', DEFAULT_PORT), 10) || DEFAULT_PORT;
@@ -118,7 +119,7 @@ function main() {
     process.exit(0);
   }
 
-  if (!shouldRunForCurrentShutdown()) {
+  if (!force && !shouldRunForCurrentShutdown()) {
     process.exit(0);
   }
 
