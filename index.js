@@ -3,6 +3,7 @@
 var net = require('net');
 var dgram = require('dgram');
 var fs = require('fs');
+var execSync = require('child_process').execSync;
 var libQ = require('kew');
 var io = require('socket.io-client');
 
@@ -71,6 +72,8 @@ OnkyoAvrManager.prototype.onStart = function () {
 
 OnkyoAvrManager.prototype.onStop = function () {
   var defer = libQ.defer();
+  var self = this;
+  var shouldPowerOffReceiver = this.shouldPowerOffReceiverOnStop();
 
   this.stopping = true;
   this.clearReconnectTimer();
@@ -81,17 +84,71 @@ OnkyoAvrManager.prototype.onStop = function () {
   this.closeDiscoverySocket();
   this.closeVolumioSocket();
 
+  if (shouldPowerOffReceiver) {
+    this.logInfo('Volumio system poweroff detected; powering off receiver');
+    this.powerOff();
+
+    setTimeout(function () {
+      self.closeReceiverSocket();
+      self.connected = false;
+      self.logInfo('Stopped Onkyo AVR Manager');
+      defer.resolve();
+    }, 750);
+
+    return defer.promise;
+  }
+
+  this.closeReceiverSocket();
+  this.connected = false;
+  this.logInfo('Stopped Onkyo AVR Manager');
+  defer.resolve();
+  return defer.promise;
+};
+
+OnkyoAvrManager.prototype.closeReceiverSocket = function () {
   if (this.socket) {
     this.socket.removeAllListeners();
     this.socket.end();
     this.socket.destroy();
     this.socket = null;
   }
+};
 
-  this.connected = false;
-  this.logInfo('Stopped Onkyo AVR Manager');
-  defer.resolve();
-  return defer.promise;
+OnkyoAvrManager.prototype.shouldPowerOffReceiverOnStop = function () {
+  if (!this.getBooleanConfigValue('powerOffOnVolumioShutdown', true)) {
+    return false;
+  }
+
+  if (!this.connected || !this.socket) {
+    this.logInfo('Skipping receiver power off because AVR is not connected');
+    return false;
+  }
+
+  if (!this.isSystemPoweroffInProgress()) {
+    return false;
+  }
+
+  return true;
+};
+
+OnkyoAvrManager.prototype.isSystemPoweroffInProgress = function () {
+  var jobs;
+
+  try {
+    jobs = execSync('systemctl list-jobs --plain --no-legend --no-pager 2>/dev/null', {
+      encoding: 'utf8',
+      timeout: 1000
+    });
+  } catch (err) {
+    return false;
+  }
+
+  if (/reboot\.target|kexec\.target/i.test(jobs)) {
+    this.logInfo('System reboot detected; receiver power off skipped');
+    return false;
+  }
+
+  return /poweroff\.target|halt\.target/i.test(jobs);
 };
 
 OnkyoAvrManager.prototype.onVolumioStateChange = function (state) {
@@ -1132,6 +1189,7 @@ OnkyoAvrManager.prototype.saveSettings = function (data) {
   this.setConfigValue('selectInputOnPlayback', values.selectInputOnPlayback);
   this.setConfigValue('unmuteOnPlayback', values.unmuteOnPlayback);
   this.setConfigValue('setDefaultVolumeOnPlayback', values.setDefaultVolumeOnPlayback);
+  this.setConfigValue('powerOffOnVolumioShutdown', values.powerOffOnVolumioShutdown);
   this.setConfigValue('volumioVolumeControlsReceiver', values.volumioVolumeControlsReceiver);
   this.setConfigValue('receiverMaxVolume', values.receiverMaxVolume);
   this.setConfigValue('volumeDebounceMs', values.volumeDebounceMs);

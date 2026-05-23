@@ -13,6 +13,7 @@ The plugin can discover an Onkyo receiver on the local network, power it on when
   - select configured HDMI/input source
   - unmute receiver
   - optionally set a default receiver volume
+- Optional receiver power-off when Volumio is actually powered down.
 - Volumio volume slider integration:
   - slider changes send Onkyo `MVL` volume commands
   - mute/unmute sends Onkyo `AMT` commands
@@ -66,6 +67,7 @@ Available settings:
 | Select configured HDMI input on playback start | `true` | Sends `SLIxx` using the configured input code. |
 | Unmute receiver on playback start | `true` | Sends `AMT00`. |
 | Set default volume on playback start | `false` | Optionally sets receiver volume when playback starts. |
+| Power off receiver when Volumio shuts down | `true` | Sends `PWR00` only during OS poweroff/halt, not playback stop/pause or reboot. |
 | Use Volumio volume slider for receiver | `true` | Registers plugin as Volumio volume override. |
 | Receiver maximum volume | `80` | Maps Volumio `0..100` to AVR `0..receiverMaxVolume`. |
 | Volume slider debounce in milliseconds | `200` | Debounce used by fallback state listener. |
@@ -201,6 +203,26 @@ CoreCommandRouter::executeOnPlugin: onkyo_avr_manager , alsavolume
 ```
 
 If you see `VolumeController::SetAlsaVolume...` during normal slider changes, Volumio is still touching the digital/software mixer. Re-check the plugin registration log and the current Volumio audio mixer configuration.
+
+## Shutdown Behavior
+
+When `Power off receiver when Volumio shuts down` is enabled, the plugin attempts to send:
+
+```text
+PWR00
+```
+
+only when Volumio is being powered off or halted at the operating-system level.
+
+It is intentionally not triggered by:
+
+- playback stop
+- playback pause
+- plugin disable/restart
+- Volumio service restart
+- Volumio reboot
+
+The plugin distinguishes shutdown from reboot by checking systemd jobs during plugin stop. It powers off the AVR only when `poweroff.target` or `halt.target` is active, and skips the action when `reboot.target` is active.
 
 ## Troubleshooting
 
