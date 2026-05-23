@@ -29,7 +29,6 @@
             "selectInputOnPlayback",
             "unmuteOnPlayback",
             "setDefaultVolumeOnPlayback",
-            "powerOffOnVolumioShutdown",
             "volumioVolumeControlsReceiver",
             "receiverMaxVolume",
             "volumeDebounceMs",
@@ -104,12 +103,6 @@
           "element": "switch",
           "label": "Set default volume on playback start",
           "value": false
-        },
-        {
-          "id": "powerOffOnVolumioShutdown",
-          "element": "switch",
-          "label": "Power off receiver when Volumio shuts down",
-          "value": true
         },
         {
           "id": "volumioVolumeControlsReceiver",
