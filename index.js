@@ -156,19 +156,20 @@ OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
   var configPath = this.configFilePath || (__dirname + '/config.json');
   var service = [
     '[Unit]',
-    'Description=Power off Onkyo AVR during Volumio shutdown',
+    'Description=Onkyo AVR shutdown power-off hook',
     'DefaultDependencies=no',
-    'Before=shutdown.target halt.target poweroff.target',
-    'Conflicts=reboot.target kexec.target',
+    'After=network-online.target',
+    'Before=shutdown.target',
     '',
     '[Service]',
     'Type=oneshot',
-    'ExecStart=/usr/bin/node ' + __dirname + '/shutdown-poweroff.js ' + configPath,
-    'TimeoutStartSec=5',
+    'ExecStart=/bin/true',
+    'ExecStop=/usr/bin/node ' + __dirname + '/shutdown-poweroff.js ' + configPath,
     'RemainAfterExit=yes',
+    'TimeoutStopSec=8',
     '',
     '[Install]',
-    'WantedBy=poweroff.target halt.target',
+    'WantedBy=multi-user.target',
     ''
   ].join('\n');
 
@@ -178,7 +179,7 @@ OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
 
   try {
     fs.writeFileSync('/tmp/onkyo-avr-poweroff.service', service);
-    execSync('sudo cp /tmp/onkyo-avr-poweroff.service /etc/systemd/system/onkyo-avr-poweroff.service && sudo systemctl daemon-reload && sudo systemctl enable onkyo-avr-poweroff.service >/dev/null 2>&1', {
+    execSync('sudo cp /tmp/onkyo-avr-poweroff.service /etc/systemd/system/onkyo-avr-poweroff.service && sudo systemctl daemon-reload && sudo systemctl enable onkyo-avr-poweroff.service >/dev/null 2>&1 && sudo systemctl restart onkyo-avr-poweroff.service', {
       timeout: 5000
     });
     this.logInfo('Installed Onkyo AVR shutdown power-off service');

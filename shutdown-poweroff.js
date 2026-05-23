@@ -71,6 +71,35 @@ function log(message) {
   console.log('[onkyo_avr_manager_shutdown] ' + message);
 }
 
+function getSystemJobs() {
+  var execSync = require('child_process').execSync;
+
+  try {
+    return execSync('systemctl list-jobs --plain --no-legend --no-pager 2>/dev/null', {
+      encoding: 'utf8',
+      timeout: 1000
+    });
+  } catch (err) {
+    return '';
+  }
+}
+
+function shouldRunForCurrentShutdown() {
+  var jobs = getSystemJobs();
+
+  if (/reboot\.target|kexec\.target/i.test(jobs)) {
+    log('Reboot detected; receiver power off skipped');
+    return false;
+  }
+
+  if (/poweroff\.target|halt\.target/i.test(jobs)) {
+    return true;
+  }
+
+  log('No poweroff or halt job detected; receiver power off skipped');
+  return false;
+}
+
 function main() {
   var configPath = process.argv[2] || (__dirname + '/config.json');
   var config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -86,6 +115,10 @@ function main() {
 
   if (!host) {
     log('Receiver host is not configured');
+    process.exit(0);
+  }
+
+  if (!shouldRunForCurrentShutdown()) {
     process.exit(0);
   }
 
