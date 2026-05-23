@@ -102,6 +102,7 @@ function shouldRunForCurrentShutdown() {
 
 function main() {
   var configPath = process.argv[2] || (__dirname + '/config.json');
+  var action = process.argv[3] || '';
   var force = process.argv.indexOf('--force') !== -1;
   var config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   var host = String(readConfigValue(config, 'receiverHost', '')).trim();
@@ -119,7 +120,12 @@ function main() {
     process.exit(0);
   }
 
-  if (!force && !shouldRunForCurrentShutdown()) {
+  if (!force && action && !/^(poweroff|halt)$/i.test(action)) {
+    log('Shutdown action "' + action + '" does not require receiver power off');
+    process.exit(0);
+  }
+
+  if (!force && !action && !shouldRunForCurrentShutdown()) {
     process.exit(0);
   }
 

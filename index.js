@@ -154,22 +154,10 @@ OnkyoAvrManager.prototype.isSystemPoweroffInProgress = function () {
 
 OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
   var configPath = this.writeShutdownPoweroffConfig();
-  var service = [
-    '[Unit]',
-    'Description=Onkyo AVR shutdown power-off hook',
-    'DefaultDependencies=no',
-    'After=network-online.target',
-    'Before=shutdown.target',
-    '',
-    '[Service]',
-    'Type=oneshot',
-    'ExecStart=/bin/true',
-    'ExecStop=/usr/bin/node ' + __dirname + '/shutdown-poweroff.js ' + configPath,
-    'RemainAfterExit=yes',
-    'TimeoutStopSec=8',
-    '',
-    '[Install]',
-    'WantedBy=multi-user.target',
+  var hookScript = [
+    '#!/bin/sh',
+    'ACTION="${1:-}"',
+    'exec /usr/bin/node ' + __dirname + '/shutdown-poweroff.js ' + configPath + ' "$ACTION"',
     ''
   ].join('\n');
 
@@ -178,13 +166,13 @@ OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
   }
 
   try {
-    fs.writeFileSync('/tmp/onkyo-avr-poweroff.service', service);
-    execSync('sudo cp /tmp/onkyo-avr-poweroff.service /etc/systemd/system/onkyo-avr-poweroff.service && sudo systemctl daemon-reload && sudo systemctl enable onkyo-avr-poweroff.service >/dev/null 2>&1 && sudo systemctl restart onkyo-avr-poweroff.service', {
+    fs.writeFileSync('/tmp/onkyo-avr-poweroff.sh', hookScript);
+    execSync('sudo mkdir -p /etc/systemd/system-shutdown && sudo cp /tmp/onkyo-avr-poweroff.sh /etc/systemd/system-shutdown/onkyo-avr-poweroff && sudo chmod 755 /etc/systemd/system-shutdown/onkyo-avr-poweroff && sudo rm -f /etc/systemd/system/onkyo-avr-poweroff.service && sudo systemctl daemon-reload', {
       timeout: 5000
     });
-    this.logInfo('Installed Onkyo AVR shutdown power-off service');
+    this.logInfo('Installed Onkyo AVR shutdown power-off hook');
   } catch (err) {
-    this.logError('Failed to install Onkyo AVR shutdown power-off service: ' + err.message);
+    this.logError('Failed to install Onkyo AVR shutdown power-off hook: ' + err.message);
   }
 };
 
