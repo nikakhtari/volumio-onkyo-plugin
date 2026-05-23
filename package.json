@@ -1,0 +1,20 @@
+{
+  "name": "onkyo_avr_manager",
+  "version": "0.1.0",
+  "description": "Volumio system_controller plugin for managing an Onkyo AVR over Ethernet eISCP.",
+  "main": "index.js",
+  "volumio_info": {
+    "prettyName": "Onkyo AVR Manager",
+    "plugin_type": "system_controller",
+    "icon": "fa-volume-up"
+  },
+  "author": "Volumio Community",
+  "license": "MIT",
+  "dependencies": {
+    "kew": "^0.7.0",
+    "socket.io-client": "^2.5.0"
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}

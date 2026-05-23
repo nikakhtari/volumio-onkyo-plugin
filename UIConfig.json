@@ -1,0 +1,146 @@
+{
+  "page": {
+    "label": "Onkyo AVR Manager",
+    "description": "Control an Onkyo AVR over Ethernet eISCP.",
+    "icon": "fa-volume-up"
+  },
+  "sections": [
+    {
+      "id": "receiver",
+      "element": "section",
+      "label": "Receiver",
+      "icon": "fa-plug",
+      "onSave": {
+        "type": "controller",
+        "endpoint": "system_controller/onkyo_avr_manager",
+        "method": "saveSettings"
+      },
+      "saveButton": {
+        "label": "Save",
+          "data": [
+            "receiverHost",
+            "receiverPort",
+            "autoDiscovery",
+            "discoveryBroadcastAddress",
+            "discoveryTimeoutMs",
+            "hdmiInput",
+            "playbackAutomation",
+            "powerOnPlayback",
+            "selectInputOnPlayback",
+            "unmuteOnPlayback",
+            "setDefaultVolumeOnPlayback",
+            "volumioVolumeControlsReceiver",
+            "receiverMaxVolume",
+            "volumeDebounceMs",
+            "playbackPowerDelayMs",
+            "defaultVolume",
+            "reconnectDelayMs"
+        ]
+      },
+      "content": [
+        {
+          "id": "receiverHost",
+          "element": "input",
+          "label": "Receiver IP address or hostname",
+          "value": "192.168.1.100"
+        },
+        {
+          "id": "receiverPort",
+          "element": "input",
+          "label": "eISCP TCP port",
+          "value": 60128
+        },
+        {
+          "id": "autoDiscovery",
+          "element": "switch",
+          "label": "Automatically discover receiver",
+          "value": true
+        },
+        {
+          "id": "discoveryBroadcastAddress",
+          "element": "input",
+          "label": "Discovery broadcast address",
+          "value": "255.255.255.255"
+        },
+        {
+          "id": "discoveryTimeoutMs",
+          "element": "input",
+          "label": "Discovery timeout in milliseconds",
+          "value": 3000
+        },
+        {
+          "id": "hdmiInput",
+          "element": "input",
+          "label": "Configured HDMI input SLI code",
+          "value": "11"
+        },
+        {
+          "id": "playbackAutomation",
+          "element": "switch",
+          "label": "Run automation on playback start",
+          "value": true
+        },
+        {
+          "id": "powerOnPlayback",
+          "element": "switch",
+          "label": "Power on receiver on playback start",
+          "value": true
+        },
+        {
+          "id": "selectInputOnPlayback",
+          "element": "switch",
+          "label": "Select configured HDMI input on playback start",
+          "value": true
+        },
+        {
+          "id": "unmuteOnPlayback",
+          "element": "switch",
+          "label": "Unmute receiver on playback start",
+          "value": true
+        },
+        {
+          "id": "setDefaultVolumeOnPlayback",
+          "element": "switch",
+          "label": "Set default volume on playback start",
+          "value": false
+        },
+        {
+          "id": "volumioVolumeControlsReceiver",
+          "element": "switch",
+          "label": "Use Volumio volume slider for receiver",
+          "value": true
+        },
+        {
+          "id": "receiverMaxVolume",
+          "element": "input",
+          "label": "Receiver maximum volume",
+          "value": 80
+        },
+        {
+          "id": "volumeDebounceMs",
+          "element": "input",
+          "label": "Volume slider debounce in milliseconds",
+          "value": 200
+        },
+        {
+          "id": "playbackPowerDelayMs",
+          "element": "input",
+          "label": "Delay after power on in milliseconds",
+          "value": 1500
+        },
+        {
+          "id": "defaultVolume",
+          "element": "input",
+          "label": "Default volume level",
+          "value": 35
+        },
+        {
+          "id": "reconnectDelayMs",
+          "element": "input",
+          "label": "Reconnect delay in milliseconds",
+          "value": 5000
+        }
+      ]
+    }
+  ]
+}

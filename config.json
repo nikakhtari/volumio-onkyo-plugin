@@ -1,0 +1,70 @@
+{
+  "receiverHost": {
+    "type": "string",
+    "value": "192.168.1.100"
+  },
+  "receiverPort": {
+    "type": "number",
+    "value": 60128
+  },
+  "autoDiscovery": {
+    "type": "boolean",
+    "value": true
+  },
+  "discoveryBroadcastAddress": {
+    "type": "string",
+    "value": "255.255.255.255"
+  },
+  "discoveryTimeoutMs": {
+    "type": "number",
+    "value": 3000
+  },
+  "hdmiInput": {
+    "type": "string",
+    "value": "11"
+  },
+  "playbackAutomation": {
+    "type": "boolean",
+    "value": true
+  },
+  "powerOnPlayback": {
+    "type": "boolean",
+    "value": true
+  },
+  "selectInputOnPlayback": {
+    "type": "boolean",
+    "value": true
+  },
+  "unmuteOnPlayback": {
+    "type": "boolean",
+    "value": true
+  },
+  "setDefaultVolumeOnPlayback": {
+    "type": "boolean",
+    "value": false
+  },
+  "volumioVolumeControlsReceiver": {
+    "type": "boolean",
+    "value": true
+  },
+  "receiverMaxVolume": {
+    "type": "number",
+    "value": 80
+  },
+  "volumeDebounceMs": {
+    "type": "number",
+    "value": 200
+  },
+  "playbackPowerDelayMs": {
+    "type": "number",
+    "value": 1500
+  },
+  "defaultVolume": {
+    "type": "number",
+    "value": 35
+  },
+  "reconnectDelayMs": {
+    "type": "number",
+    "value": 5000
+  }
+}
