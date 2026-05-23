@@ -71,6 +71,14 @@ function log(message) {
   console.log('[onkyo_avr_manager_shutdown] ' + message);
 }
 
+function writeMarker(message) {
+  try {
+    fs.writeFileSync('/data/onkyo-avr-poweroff.last', message + '\n');
+  } catch (err) {
+    log('Unable to write shutdown marker: ' + err.message);
+  }
+}
+
 function getSystemJobs() {
   var execSync = require('child_process').execSync;
 
@@ -112,20 +120,24 @@ function main() {
 
   if (!readBooleanConfigValue(config, 'powerOffOnVolumioShutdown', true)) {
     log('Power off on Volumio shutdown is disabled');
+    writeMarker('disabled');
     process.exit(0);
   }
 
   if (!host) {
     log('Receiver host is not configured');
+    writeMarker('no-host');
     process.exit(0);
   }
 
   if (!force && action && !/^(poweroff|halt)$/i.test(action)) {
     log('Shutdown action "' + action + '" does not require receiver power off');
+    writeMarker('skip:' + action);
     process.exit(0);
   }
 
   if (!force && !action && !shouldRunForCurrentShutdown()) {
+    writeMarker('skip:no-action');
     process.exit(0);
   }
 
@@ -146,12 +158,14 @@ function main() {
   }
 
   log('Sending power off to ' + host + ':' + port);
+  writeMarker('attempt:' + host + ':' + port + ':' + (action || 'no-action'));
   socket = net.createConnection({ host: host, port: port });
   socket.setTimeout(2000);
 
   socket.on('connect', function () {
     socket.write(buildEiscpPacket('PWR00'), function () {
       log('TX !1PWR00');
+      writeMarker('sent:' + host + ':' + port + ':' + (action || 'no-action'));
       setTimeout(function () {
         finish(0);
       }, 500);
@@ -160,11 +174,13 @@ function main() {
 
   socket.on('timeout', function () {
     log('Timed out while powering off receiver');
+    writeMarker('timeout:' + host + ':' + port + ':' + (action || 'no-action'));
     finish(0);
   });
 
   socket.on('error', function (err) {
     log('Could not power off receiver: ' + err.message);
+    writeMarker('error:' + err.message);
     finish(0);
   });
 }
