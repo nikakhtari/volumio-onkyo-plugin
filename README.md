@@ -224,6 +224,14 @@ It is intentionally not triggered by:
 
 The plugin distinguishes shutdown from reboot by checking systemd jobs during plugin stop. It powers off the AVR only when `poweroff.target` or `halt.target` is active, and skips the action when `reboot.target` is active.
 
+The plugin also installs a small systemd oneshot helper:
+
+```text
+/etc/systemd/system/onkyo-avr-poweroff.service
+```
+
+That helper runs only for `poweroff.target` and `halt.target`. It sends `PWR00` directly with `shutdown-poweroff.js`, which is more reliable than depending only on Volumio's plugin stop lifecycle because system shutdown ordering can stop Volumio before plugin cleanup has enough time to run.
+
 ## Troubleshooting
 
 ### Slider is missing

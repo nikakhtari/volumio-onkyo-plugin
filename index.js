@@ -56,6 +56,7 @@ OnkyoAvrManager.prototype.onStart = function () {
 
   this.stopping = false;
   this.loadConfig();
+  this.installShutdownPoweroffService();
 
   if (this.isAutoDiscoveryEnabled()) {
     this.discoverReceiverAndConnect(true);
@@ -149,6 +150,41 @@ OnkyoAvrManager.prototype.isSystemPoweroffInProgress = function () {
   }
 
   return /poweroff\.target|halt\.target/i.test(jobs);
+};
+
+OnkyoAvrManager.prototype.installShutdownPoweroffService = function () {
+  var configPath = this.configFilePath || (__dirname + '/config.json');
+  var service = [
+    '[Unit]',
+    'Description=Power off Onkyo AVR during Volumio shutdown',
+    'DefaultDependencies=no',
+    'Before=shutdown.target halt.target poweroff.target',
+    'Conflicts=reboot.target kexec.target',
+    '',
+    '[Service]',
+    'Type=oneshot',
+    'ExecStart=/usr/bin/node ' + __dirname + '/shutdown-poweroff.js ' + configPath,
+    'TimeoutStartSec=5',
+    'RemainAfterExit=yes',
+    '',
+    '[Install]',
+    'WantedBy=poweroff.target halt.target',
+    ''
+  ].join('\n');
+
+  if (process.platform !== 'linux') {
+    return;
+  }
+
+  try {
+    fs.writeFileSync('/tmp/onkyo-avr-poweroff.service', service);
+    execSync('sudo cp /tmp/onkyo-avr-poweroff.service /etc/systemd/system/onkyo-avr-poweroff.service && sudo systemctl daemon-reload && sudo systemctl enable onkyo-avr-poweroff.service >/dev/null 2>&1', {
+      timeout: 5000
+    });
+    this.logInfo('Installed Onkyo AVR shutdown power-off service');
+  } catch (err) {
+    this.logError('Failed to install Onkyo AVR shutdown power-off service: ' + err.message);
+  }
 };
 
 OnkyoAvrManager.prototype.onVolumioStateChange = function (state) {
@@ -761,6 +797,7 @@ OnkyoAvrManager.prototype.handleDiscoveredReceiver = function (result) {
   if (currentHost !== result.address) {
     this.setConfigValue('receiverHost', result.address);
     this.saveConfig();
+    this.installShutdownPoweroffService();
     this.logInfo('Discovered Onkyo AVR IP changed from ' + currentHost + ' to ' + result.address);
     this.pushToast('success', 'Onkyo AVR Discovered', description);
     return;
@@ -1198,6 +1235,7 @@ OnkyoAvrManager.prototype.saveSettings = function (data) {
   this.setConfigValue('reconnectDelayMs', values.reconnectDelayMs);
 
   this.saveConfig();
+  this.installShutdownPoweroffService();
   this.initVolumioVolumeOverride();
 
   this.logInfo('Saved Onkyo AVR Manager settings');
